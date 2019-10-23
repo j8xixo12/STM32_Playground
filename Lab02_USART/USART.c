@@ -49,27 +49,28 @@ static const uint16_t LED[4] = {GPIO_Pin_12, GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_
 void init(void) {
     RCC_APB2ENR = (1 << 4); // Enable USART1
     RCC_AHB1ENR = ((1 << 3) | (1 << 0)); // Enable GPIOA, GPIOD
-    RCC_CR |= (1 | (1 << 16)); // Enable HSE(Bit 16)
-    RCC_CFGR |= 1 << 1; // Use internal clock fck = 16Mhz
+    RCC_CR |= (1 | (1 << 16) | (1 << 24)); // Enable HSE(Bit 16) HSI PLL
+    RCC_CFGR |= 1 << 0; // Use internal clock fck = 16Mhz
+    RCC_PLLCFGR = (0x24000000 | (0x8 | (0x150 << 6) | (1 << 22)));
 
     GPIOD_MODER |= (0x55 << 24); // Pin 12-15 set to General purpose output mode
-    GPIOD_OTYPER = 0x00000000; // Pin 12-15 set to push pull mode
-    GPIOD_OSPEEDR = 0x00000000; // Pin 12-15 speed set to 2Mhz
-    GPIOD_PUPDR = 0x00000000;
+    GPIOD_OTYPER = 0x0; // Pin 12-15 set to push pull mode
+    GPIOD_OSPEEDR = (0x2 << 18); // Pin 12-15 speed set to 2Mhz
+    GPIOD_PUPDR = 0x0;
 
     GPIOA_MODER |= (0x2 << 18); // Set PA9 Tx PA10 Rx
-    GPIOA_OTYPER = 0x00000000; // PA9 PA 10 set to push pull mode
+    GPIOA_OTYPER = 0x0; // PA9 PA 10 set to push pull mode
     GPIOA_OSPEEDR = (0x2 << 18); // Pin 9 speed set to 50Mhz
     GPIOA_AFRH = (0x7 << 4); // Set PA9 alternate function
 
-    USART1_BRR = 0xD04 << 1; // Baud rate 2400 at fck = 8Mhz
+    USART1_BRR = 0xD04; // Baud rate 2400 at fck = 8Mhz
     // USART1_BRR = 0x1A08 >> 0; // Baud rate 1200 at fck = 8Mhz
     USART1_CR1 = 0x0000200C; // UE TE RE enable
 }
 
 void blink(unsigned int *count_1, unsigned int *count_2, const uint16_t LED_In[]) {
     GPIOD_BSRR = LED_In[(*count_1) % 4];
-    for (*count_2 = 0; *count_2 < 150000; ++(*count_2));
+    for (*count_2 = 0; *count_2 < 20000; ++(*count_2));
         GPIOD_BSRR = (LED_In[(*count_1) % 4] << 16);
     ++(*count_1);
 }
